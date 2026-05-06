@@ -1,0 +1,130 @@
+   import java.util.Random;
+
+public class Main {
+
+    public static void main(String[] args) {
+    long startTime = System.currentTimeMillis();
+
+    int nThread = Runtime.getRuntime().availableProcessors();
+    System.out.println("Numero di core: " + nThread);
+
+
+        final int DIM = 100000000;
+        final int NMAX = 100000;
+
+        int nMax = 0;
+        int nMin = 0;
+        int nEqual = 0;
+
+        int[] vet = new int[DIM];
+        Random rand = new Random();
+
+        for (int i = 0; i < DIM; i++) {
+            vet[i] = rand.nextInt(NMAX) + 1;
+        }
+
+        int ricer = rand.nextInt(NMAX) + 1;
+        System.out.println("il ricercato e "+ricer);
+
+
+        Cercatore[] tasks = new Cercatore[nThread];
+        Thread[] threads = new Thread[nThread];
+
+            int blocco = DIM / nThread;
+        for (int i = 0; i < nThread; i++) {
+            int start = i * blocco;
+            int end;
+
+            if (i == nThread - 1) {
+                end = DIM;
+            } else {
+                end = start + blocco;
+            }
+
+            tasks[i] = new Cercatore(vet, ricer, DIM, start, end);
+            threads[i] = new Thread(tasks[i]);
+            threads[i].start();
+        }
+
+                for (int i = 0; i < nThread; i++) {
+            try {
+                threads[i].join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+      //  Cercatore cercatore = new Cercatore(vet, ricer, DIM);
+      //  cercatore.ricerca();
+      for(int i=0;i<nThread;i++){
+          nMax += tasks[i].getNmax();
+          nMin += tasks[i].getNmin();
+          nEqual += tasks[i].getNequal();
+
+      }
+
+        System.out.println("nMax: " + nMax);
+        System.out.println("nMin: " + nMin);
+        System.out.println("nEqual: " + nEqual);
+
+        long endTime = System.currentTimeMillis();
+        System.out.println("Tempo di esecuzione: " + (endTime - startTime) + " ms");
+    }
+}
+
+public class Cercatore implements Runnable {
+    private int nMax;
+    private int nMin;
+    private int nEqual;
+    private int[] vet;
+    private int ricer;  
+    private int DIM;
+    private int start;
+    private int end;
+
+
+    
+public Cercatore(int[] vet, int ricer,int DIM,int start,int end) {
+    this.vet = vet;
+    this.ricer = ricer;
+    this.DIM = DIM;
+    this.start = start;
+    this.end = end;
+
+}
+
+public void ricerca() {
+    nMax = 0;
+    nMin = 0;
+    nEqual = 0;
+
+    for (int i = start; i < end; i++) {
+        if (vet[i]>ricer) {
+            nMax++;
+        }else if (vet[i]<ricer) {
+            nMin++;
+        }else {
+            nEqual++;
+        }
+    }
+}
+
+public int getNmax() {
+    return nMax;
+}
+
+public int getNmin() {
+    return nMin;
+}
+
+public int getNequal() {
+    return nEqual;
+}
+
+@Override
+public void run() {
+    ricerca();
+}
+
+}
